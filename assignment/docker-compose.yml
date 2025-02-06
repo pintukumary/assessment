@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: postgres_container
+    environment:
+      - POSTGRES_USER=swageruser
+      - POSTGRES_PASSWORD=Swagerdb123
+      - POSTGRES_DB=swagerdb
+    volumes:
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "swageruser", "-d", "swagerdb"]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+
+  backend:
+    build:
+      context: ./backend
+    container_name: backend_container
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy 
+    ports:
+      - "8000:8080" 
+    environment:
+      - DATABASE_URL=postgresql://swageruser:Swagerdb123@postgres:5432/swagerdb
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend_container
+    networks:
+      - app-network
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"  
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+
