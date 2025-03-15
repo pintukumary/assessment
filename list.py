@@ -25,7 +25,6 @@ def lambda_handler(event, context):
                 'body': json.dumps({'message': 'Bad Request: "users" should be a list'})
             }
 
-        # Prepare data in CSV format
         result_data = [f'{user["userId"]},{user["name"]}\n' for user in users]
 
         # Define file path for temporary storage in Lambda
